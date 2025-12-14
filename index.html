@@ -341,7 +341,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="inTime">In-Time (Late after 9:15 AM)</label>
+                    <label for="inTime">In-Time (Late after 9:01 AM)</label>
                     <input type="time" id="inTime" value="09:00">
                 </div>
                 <div class="form-group">
@@ -430,7 +430,7 @@
         // --- CONSTANTS & DOM ELEMENTS ---
         const LS_KEY = 'salaryCrossCheckData';
         const LATE_DEDUCTION_AMOUNT = 100;
-        const LATE_CUTOFF_TIME = '09:15'; // 9:15 AM
+        const LATE_CUTOFF_TIME = '09:01'; // 9:15 AM
         const SHIFT_START_TIME = '09:00';
         const SHIFT_END_TIME = '18:00'; // 6:00 PM
 
@@ -592,12 +592,11 @@
             }
 
             let salary = config.perDaySalary;
-            let lateDeduction = 0;
+            
 
             // Late Deduction: Flat rate if late minutes > 0
-            if (entry.lateMinutes > 0) {
-                lateDeduction = LATE_DEDUCTION_AMOUNT;
-            }
+            let lateHours = entry.lateMinutes / 60;
+    let lateDeduction = lateHours * config.otRate
 
             // OT Pay: OT Hours * OT Rate
             let otPay = entry.otHours * config.otRate;
@@ -757,9 +756,12 @@
                     `${entry.inTime || '--'} / ${entry.outTime || '--'}` :
                     '--';
 
-                const lateDisplay = entry.lateMinutes > 0
-                    ? `${entry.lateMinutes} min (-₹${LATE_DEDUCTION_AMOUNT})`
-                    : 'On Time';
+                const lateHours = entry.lateMinutes / 60;
+        const lateAmount = lateHours * config.otRate;
+
+        const lateDisplay = entry.lateMinutes > 0
+            ? `${entry.lateMinutes} min (-₹${lateAmount.toFixed(2)})`
+            : 'On Time';
 
                 row.innerHTML = `
                     <td data-label="Date">${entry.date}</td>
