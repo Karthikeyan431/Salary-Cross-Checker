@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Salary Cross-Check (Offline)</title>
+    <style>
+        /*
+        --------------------------------------------------
+        1. CSS STYLES (Kept consistent for professionalism)
+        --------------------------------------------------
+        */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 15px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Card Layout */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2 {
+            color: var(--secondary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        /* Form Group */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+
+        .form-group input[type="number"],
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group input[type="time"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        .form-group .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-group .input-group input {
+            flex-grow: 1;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #bd2130;
+        }
+
+        .btn-print {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-print:hover {
+            background-color: #5a6268;
+        }
+
+        /* Grid for Summary and Setup */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* Summary Cards */
+        .summary-card {
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            color: white;
+        }
+
+        .summary-card h4 {
+            margin: 0 0 5px 0;
+            font-size: 1em;
+        }
+
+        .summary-card p {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .card-present { background-color: var(--success-color); }
+        .card-absent { background-color: var(--danger-color); }
+        .card-ot { background-color: var(--primary-color); }
+        .card-late { background-color: var(--warning-color); color: #343a40;}
+        .card-salary { background-color: #17a2b8; }
+
+        /* Table Styles */
+        .daily-records table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .daily-records th, .daily-records td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+
+        .daily-records th {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .daily-records tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .late-entry {
+            background-color: rgba(255, 193, 7, 0.1); /* Light yellow background */
+        }
+
+        .ot-entry {
+            background-color: rgba(0, 123, 255, 0.1); /* Light blue background */
+        }
+
+        /* Salary Cross Check */
+        #crossCheckResult {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .match {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .mismatch {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        /* Utility for printing */
+        @media print {
+            body {
+                background-color: white;
+            }
+            .container {
+                margin: 0;
+                max-width: none;
+                padding: 0;
+            }
+            .card {
+                border: 1px solid #ccc;
+                page-break-inside: avoid;
+                box-shadow: none;
+            }
+            #attendanceEntry, #salaryCrossCheck {
+                display: none; /* Hide interactive sections */
+            }
+            .btn {
+                display: none;
+            }
+            h1 {
+                text-align: left;
+                border-bottom: 1px solid black;
+            }
+            .daily-records th, .daily-records td {
+                border: 1px solid black;
+            }
+            .summary-card {
+                padding: 10px;
+            }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .daily-records table, .daily-records thead, .daily-records tbody, .daily-records th, .daily-records td, .daily-records tr {
+                display: block;
+            }
+            .daily-records thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            .daily-records tr {
+                border: 1px solid var(--border-color);
+                margin-bottom: 10px;
+                border-radius: 4px;
+            }
+            .daily-records td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 50%;
+                text-align: right;
+            }
+            .daily-records td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: bold;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💵 Employee Salary Verification Tool</h1>
+
+        <div id="salarySetup" class="card">
+            <h2>⚙️ Salary & Rate Setup</h2>
+            <div class="grid-3">
+                <div class="form-group">
+                    <label for="monthlySalary">Monthly Salary (₹)</label>
+                    <input type="number" id="monthlySalary" value="44000" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="shiftHours">Shift Hours (Hours)</label>
+                    <input type="number" id="shiftHours" value="9" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Shift Timing</label>
+                    <p style="margin-top: 0; font-size: 1.2em; font-weight: bold;">9:00 AM – 6:00 PM</p>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <p>Calculated Daily Salary: <span id="perDaySalary" style="font-weight: bold; color: var(--success-color);">₹ 0.00</span></p>
+                <p>Calculated OT Rate (Per Hour): <span id="otRate" style="font-weight: bold; color: var(--primary-color);">₹ 0.00</span></p>
+                <p><small style="color: var(--secondary-color);">* Based on 30 calendar days/month. Late deduction is a flat ₹100.</small></p>
+            </div>
+        </div>
+
+        <div id="attendanceEntry" class="card">
+            <h2>📅 Daily Attendance Entry</h2>
+            <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="form-group">
+                    <label for="entryDate">Date</label>
+                    <input type="date" id="entryDate">
+                </div>
+                <div class="form-group">
+                    <label for="attendanceStatus">Attendance</label>
+                    <select id="attendanceStatus">
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="inTime">In-Time (Late after 9:15 AM)</label>
+                    <input type="time" id="inTime" value="09:00">
+                </div>
+                <div class="form-group">
+                    <label for="outTime">Out-Time (OT after 6:00 PM)</label>
+                    <input type="time" id="outTime" value="18:00">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="manualSalaryOverride">Manual Salary Override (Optional)</label>
+                    <input type="number" id="manualSalaryOverride" placeholder="Leave blank for auto-calculation" min="0">
+                </div>
+            </div>
+            <button class="btn btn-primary" id="addEntryBtn">💾 Add Daily Entry</button>
+            <span id="dateError" style="color: var(--danger-color); margin-left: 15px;"></span>
+        </div>
+
+        <div id="monthlySummary" class="card">
+            <h2>📈 Monthly Summary (<span id="currentMonthYear"></span>)</h2>
+            <div class="grid-3">
+                <div class="summary-card card-present">
+                    <h4>Days Present</h4>
+                    <p id="summaryPresentDays">0</p>
+                </div>
+                <div class="summary-card card-absent">
+                    <h4>Days Absent</h4>
+                    <p id="summaryAbsentDays">0</p>
+                </div>
+                <div class="summary-card card-ot">
+                    <h4>Total OT (Hours)</h4>
+                    <p id="summaryOTHours">0.00</p>
+                </div>
+                <div class="summary-card card-late">
+                    <h4>Total Late Count</h4>
+                    <p id="summaryLateCount">0</p>
+                </div>
+                <div class="summary-card card-salary" style="grid-column: span 3; max-width: 400px; margin: 0 auto;">
+                    <h4>Total Expected Salary (Gross)</h4>
+                    <p id="summaryTotalSalary">₹ 0.00</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <p id="bonusMessage" style="font-weight: bold; color: var(--success-color);"></p>
+                <button class="btn btn-print" onclick="window.print()">🖨️ Print Report</button>
+            </div>
+        </div>
+
+        <div id="salaryCrossCheck" class="card">
+            <h2>⚖️ Salary Cross-Check</h2>
+            <div class="form-group">
+                <label for="companyPaidSalary">Salary Paid by Company (₹)</label>
+                <input type="number" id="companyPaidSalary" placeholder="Enter amount paid" min="0">
+            </div>
+            <button class="btn btn-success" id="checkSalaryBtn">✅ Cross-Check</button>
+            <button class="btn btn-danger" id="clearDataBtn">🗑️ Clear All Data</button>
+            <div id="crossCheckResult"></div>
+        </div>
+
+        <div id="dailyRecords" class="card daily-records">
+            <h2>📋 Daily Records</h2>
+            <div style="overflow-x: auto;">
+                <table id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>In/Out</th>
+                            <th>Late (Min)</th>
+                            <th>OT (Hrs)</th>
+                            <th>Daily Pay (₹)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+  <script>
+        /*
+        --------------------------------------------------
+        2. VANILLA JAVASCRIPT LOGIC (Updated for precise OT/Late Calculation)
+        --------------------------------------------------
+        */
+
+        // --- CONSTANTS & DOM ELEMENTS ---
+        const LS_KEY = 'salaryCrossCheckData';
+        const LATE_DEDUCTION_AMOUNT = 100;
+        const LATE_CUTOFF_TIME = '09:15'; // 9:15 AM
+        const SHIFT_START_TIME = '09:00';
+        const SHIFT_END_TIME = '18:00'; // 6:00 PM
+
+        // ... (DOM elements declarations remain the same)
+        const monthlySalaryInput = document.getElementById('monthlySalary');
+        const shiftHoursInput = document.getElementById('shiftHours');
+        const perDaySalarySpan = document.getElementById('perDaySalary');
+        const otRateSpan = document.getElementById('otRate');
+        const entryDateInput = document.getElementById('entryDate');
+        const attendanceStatusSelect = document.getElementById('attendanceStatus');
+        const inTimeInput = document.getElementById('inTime');
+        const outTimeInput = document.getElementById('outTime');
+        const manualSalaryOverrideInput = document.getElementById('manualSalaryOverride');
+        const addEntryBtn = document.getElementById('addEntryBtn');
+        const dateErrorSpan = document.getElementById('dateError');
+        const currentMonthYearSpan = document.getElementById('currentMonthYear');
+        const summaryPresentDays = document.getElementById('summaryPresentDays');
+        const summaryAbsentDays = document.getElementById('summaryAbsentDays');
+        const summaryOTHours = document.getElementById('summaryOTHours');
+        const summaryLateCount = document.getElementById('summaryLateCount');
+        const summaryTotalSalary = document.getElementById('summaryTotalSalary');
+        const bonusMessage = document.getElementById('bonusMessage');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const companyPaidSalaryInput = document.getElementById('companyPaidSalary');
+        const checkSalaryBtn = document.getElementById('checkSalaryBtn');
+        const crossCheckResultDiv = document.getElementById('crossCheckResult');
+        const recordsTableBody = document.querySelector('#recordsTable tbody');
+
+        // --- GLOBAL STATE ---
+        let config = {
+            monthlySalary: parseFloat(monthlySalaryInput.value),
+            shiftHours: parseInt(shiftHoursInput.value),
+            perDaySalary: 0,
+            otRate: 0,
+        };
+        let attendanceData = [];
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            entryDateInput.valueAsDate = new Date();
+            loadConfig();
+            loadAttendanceData();
+            calculateRates();
+            renderData();
+
+            monthlySalaryInput.addEventListener('input', updateConfigAndCalculate);
+            shiftHoursInput.addEventListener('input', updateConfigAndCalculate);
+            addEntryBtn.addEventListener('click', addDailyEntry);
+            checkSalaryBtn.addEventListener('click', crossCheckSalary);
+            clearDataBtn.addEventListener('click', clearAllData);
+            attendanceStatusSelect.addEventListener('change', toggleTimeInputs);
+
+            // Simple time validation (optional, can be expanded)
+            const validateTimeOrder = () => {
+                 if (inTimeInput.value && outTimeInput.value && inTimeInput.value > outTimeInput.value) {
+                    // Visually flag or reset
+                    outTimeInput.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+                } else {
+                    outTimeInput.style.backgroundColor = '';
+                }
+            };
+            inTimeInput.addEventListener('input', validateTimeOrder);
+            outTimeInput.addEventListener('input', validateTimeOrder);
+
+            toggleTimeInputs();
+        });
+
+        // --- PERSISTENCE FUNCTIONS ---
+        function saveConfig() {
+            localStorage.setItem('salaryConfig', JSON.stringify(config));
+        }
+
+        function loadConfig() {
+            const savedConfig = localStorage.getItem('salaryConfig');
+            if (savedConfig) {
+                const loadedConfig = JSON.parse(savedConfig);
+                config = { ...config, ...loadedConfig };
+                monthlySalaryInput.value = config.monthlySalary;
+                shiftHoursInput.value = config.shiftHours;
+            }
+        }
+
+        function saveAttendanceData() {
+            localStorage.setItem(LS_KEY, JSON.stringify(attendanceData));
+        }
+
+        function loadAttendanceData() {
+            const savedData = localStorage.getItem(LS_KEY);
+            if (savedData) {
+                attendanceData = JSON.parse(savedData);
+                attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            }
+        }
+
+        // --- SALARY CALCULATION FUNCTIONS (UPDATED) ---
+
+        function updateConfigAndCalculate() {
+            config.monthlySalary = parseFloat(monthlySalaryInput.value) || 0;
+            config.shiftHours = parseInt(shiftHoursInput.value) || 9;
+
+            calculateRates();
+            saveConfig();
+            renderData();
+        }
+
+        function calculateRates() {
+            config.perDaySalary = config.monthlySalary / 30;
+            config.otRate = config.perDaySalary / config.shiftHours;
+
+            perDaySalarySpan.textContent = `₹ ${config.perDaySalary.toFixed(2)}`;
+            otRateSpan.textContent = `₹ ${config.otRate.toFixed(2)}`;
+        }
+
+        /**
+         * Calculates OT hours (in decimal format) beyond SHIFT_END_TIME (6:00 PM).
+         * @param {string} outTime - The actual checkout time (HH:MM).
+         * @returns {number} OT hours in decimal format.
+         */
+        function calculateOTHours(outTime) {
+            if (!outTime) return 0;
+
+            const shiftEnd = new Date(`2000/01/01 ${SHIFT_END_TIME}:00`);
+            const outTimeDate = new Date(`2000/01/01 ${outTime}:00`);
+
+            if (outTimeDate > shiftEnd) {
+                const diffMs = outTimeDate.getTime() - shiftEnd.getTime();
+                // Convert milliseconds to hours (decimal)
+                return diffMs / (1000 * 60 * 60);
+            }
+            return 0;
+        }
+
+        /**
+         * Calculates the duration (in minutes) the employee was late past LATE_CUTOFF_TIME (9:15 AM).
+         * @param {string} inTime - The actual check-in time (HH:MM).
+         * @returns {number} Late minutes (0 if on time or early).
+         */
+        function calculateLateMinutes(inTime) {
+            if (!inTime) return 0;
+
+            const lateCutoff = new Date(`2000/01/01 ${LATE_CUTOFF_TIME}:00`);
+            const entryTime = new Date(`2000/01/01 ${inTime}:00`);
+
+            if (entryTime > lateCutoff) {
+                const diffMs = entryTime.getTime() - lateCutoff.getTime();
+                // Convert milliseconds to minutes
+                return Math.round(diffMs / (1000 * 60));
+            }
+            return 0;
+        }
+
+        function calculateDailySalary(entry) {
+            if (entry.manualSalary) {
+                return parseFloat(entry.manualSalary);
+            }
+
+            if (entry.status === 'Absent') {
+                return 0;
+            }
+
+            let salary = config.perDaySalary;
+            let lateDeduction = 0;
+
+            // Late Deduction: Flat rate if late minutes > 0
+            if (entry.lateMinutes > 0) {
+                lateDeduction = LATE_DEDUCTION_AMOUNT;
+            }
+
+            // OT Pay: OT Hours * OT Rate
+            let otPay = entry.otHours * config.otRate;
+
+            salary = salary + otPay - lateDeduction;
+
+            return Math.max(0, salary);
+        }
+
+        // --- ATTENDANCE ENTRY & MANAGEMENT ---
+
+        function toggleTimeInputs() {
+            const isDisabled = attendanceStatusSelect.value === 'Absent';
+            inTimeInput.disabled = isDisabled;
+            outTimeInput.disabled = isDisabled;
+            if (isDisabled) {
+                inTimeInput.value = '';
+                outTimeInput.value = '';
+            } else {
+                if (!inTimeInput.value) inTimeInput.value = SHIFT_START_TIME;
+                if (!outTimeInput.value) outTimeInput.value = SHIFT_END_TIME;
+            }
+        }
+
+        function addDailyEntry() {
+            const date = entryDateInput.value;
+            const status = attendanceStatusSelect.value;
+            const inTime = inTimeInput.value;
+            const outTime = outTimeInput.value;
+            const manualSalary = manualSalaryOverrideInput.value ? parseFloat(manualSalaryOverrideInput.value) : null;
+
+            if (!date) {
+                dateErrorSpan.textContent = "Please select a date.";
+                return;
+            }
+
+            // Prevent duplicate dates
+            if (attendanceData.some(entry => entry.date === date)) {
+                dateErrorSpan.textContent = `Entry for ${date} already exists. Please delete it first to re-add.`;
+                return;
+            } else {
+                dateErrorSpan.textContent = '';
+            }
+
+            let entry = {
+                date: date,
+                status: status,
+                inTime: null,
+                outTime: null,
+                manualSalary: manualSalary,
+                lateMinutes: 0, // NEW: Store late duration
+                otHours: 0,
+                dailySalary: 0,
+            };
+
+            if (status === 'Present') {
+                if (!inTime || !outTime) {
+                    dateErrorSpan.textContent = "In-time and Out-time are required for Present status.";
+                    return;
+                }
+                entry.inTime = inTime;
+                entry.outTime = outTime;
+
+                // Calculate NEW values
+                entry.lateMinutes = calculateLateMinutes(inTime);
+                entry.otHours = calculateOTHours(outTime);
+            }
+
+            // Final calculation
+            entry.dailySalary = calculateDailySalary(entry);
+
+            attendanceData.unshift(entry);
+            attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            saveAttendanceData();
+            renderData();
+
+            // Reset form for next entry
+            entryDateInput.valueAsDate = new Date();
+            attendanceStatusSelect.value = 'Present';
+            inTimeInput.value = SHIFT_START_TIME;
+            outTimeInput.value = SHIFT_END_TIME;
+            manualSalaryOverrideInput.value = '';
+            toggleTimeInputs();
+        }
+
+        function deleteEntry(dateToDelete) {
+            attendanceData = attendanceData.filter(entry => entry.date !== dateToDelete);
+            saveAttendanceData();
+            renderData();
+        }
+
+        // --- RENDERING & SUMMARY ---
+
+        function renderData() {
+            const selectedMonth = entryDateInput.value.substring(0, 7);
+            // Filter attendance data for the currently selected month
+            const currentMonthData = attendanceData.filter(entry => entry.date.startsWith(selectedMonth));
+
+            // 4. Monthly Summary Calculation
+            const summary = currentMonthData.reduce((acc, entry) => {
+                if (entry.status === 'Present') {
+                    acc.presentDays++;
+                    // Late count is based on lateMinutes > 0
+                    if (entry.lateMinutes > 0) acc.lateCount++;
+                    acc.otHours += entry.otHours;
+                } else if (entry.status === 'Absent') {
+                    acc.absentDays++;
+                }
+                acc.totalSalary += entry.dailySalary;
+                return acc;
+            }, { presentDays: 0, absentDays: 0, otHours: 0, lateCount: 0, totalSalary: 0 });
+
+            // 5. Bonus Logic
+            let bonus = 0;
+            let bonusMsg = '';
+            if (summary.absentDays === 0 && (summary.presentDays > 0 || currentMonthData.length > 0)) {
+                bonus = config.perDaySalary;
+                summary.totalSalary += bonus;
+                bonusMsg = `🎉 **Attendance Bonus (1 Day Salary): ₹ ${bonus.toFixed(2)}**`;
+            } else {
+                bonusMsg = '';
+            }
+
+            // Update Summary UI
+            const [year, month] = selectedMonth.split('-');
+            currentMonthYearSpan.textContent = `${new Date(year, month - 1).toLocaleString('en-US', { month: 'long' })} ${year}`;
+            summaryPresentDays.textContent = summary.presentDays;
+            summaryAbsentDays.textContent = summary.absentDays;
+            summaryOTHours.textContent = summary.otHours.toFixed(2);
+            summaryLateCount.textContent = summary.lateCount;
+            summaryTotalSalary.textContent = `₹ ${summary.totalSalary.toFixed(2)}`;
+            bonusMessage.innerHTML = bonusMsg;
+
+            document.getElementById('companyPaidSalary').dataset.expectedSalary = summary.totalSalary.toFixed(2);
+
+            // Update Daily Records Table
+            renderDailyRecordsTable(currentMonthData);
+        }
+
+        function renderDailyRecordsTable(data) {
+            recordsTableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                recordsTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No entries for this month.</td></tr>';
+                return;
+            }
+
+            data.forEach(entry => {
+                const row = recordsTableBody.insertRow();
+                let rowClass = '';
+                if (entry.lateMinutes > 0) rowClass += ' late-entry';
+                if (entry.otHours > 0) rowClass += ' ot-entry';
+                row.className = rowClass.trim();
+
+                const inOutDisplay = entry.status === 'Present' ?
+                    `${entry.inTime || '--'} / ${entry.outTime || '--'}` :
+                    '--';
+
+                const lateDisplay = entry.lateMinutes > 0
+                    ? `${entry.lateMinutes} min (-₹${LATE_DEDUCTION_AMOUNT})`
+                    : 'On Time';
+
+                row.innerHTML = `
+                    <td data-label="Date">${entry.date}</td>
+                    <td data-label="Status">${entry.status}</td>
+                    <td data-label="In/Out">${inOutDisplay}</td>
+                    <td data-label="Late (Min)">${lateDisplay}</td>
+                    <td data-label="OT (Hrs)">${entry.otHours.toFixed(2)}</td>
+                    <td data-label="Daily Pay (₹)">
+                        ${entry.manualSalary ? `*₹ ${entry.dailySalary.toFixed(2)}` : `₹ ${entry.dailySalary.toFixed(2)}`}
+                    </td>
+                    <td data-label="Action">
+                        <button class="btn btn-danger" onclick="deleteEntry('${entry.date}')" style="padding: 5px 8px;">Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        // --- SALARY CROSS CHECK & DATA MANAGEMENT ---
+        function crossCheckSalary() {
+            const paidSalary = parseFloat(companyPaidSalaryInput.value) || 0;
+            const expectedSalary = parseFloat(companyPaidSalaryInput.dataset.expectedSalary) || 0;
+
+            const difference = paidSalary - expectedSalary;
+            const absDifference = Math.abs(difference);
+
+            let resultHtml = `Expected Salary: **₹ ${expectedSalary.toFixed(2)}** | Paid Salary: **₹ ${paidSalary.toFixed(2)}**`;
+
+            if (absDifference < 0.01) {
+                crossCheckResultDiv.className = 'match';
+                resultHtml += '<br>✅ **MATCH!** The salaries are in agreement.';
+            } else {
+                crossCheckResultDiv.className = 'mismatch';
+                const status = difference > 0 ? 'OVERPAID' : 'UNDERPAID';
+                resultHtml += `<br>❌ **MISMATCH!** You are **${status}** by: **₹ ${absDifference.toFixed(2)}**`;
+            }
+
+            crossCheckResultDiv.innerHTML = resultHtml;
+        }
+
+        function clearAllData() {
+            if (confirm("Are you sure you want to clear ALL saved configuration and attendance data? This action cannot be undone.")) {
+                localStorage.removeItem(LS_KEY);
+                localStorage.removeItem('salaryConfig');
+                attendanceData = [];
+                config = {
+                    monthlySalary: 44000,
+                    shiftHours: 9,
+                    perDaySalary: 0,
+                    otRate: 0,
+                };
+                monthlySalaryInput.value = 44000;
+                shiftHoursInput.value = 9;
+
+                calculateRates();
+                renderData();
+                crossCheckResultDiv.innerHTML = '';
+                crossCheckResultDiv.className = '';
+                companyPaidSalaryInput.value = '';
+                alert("All data cleared.");
+            }
+        }
+
+    </script>
+</body>
+</html>
